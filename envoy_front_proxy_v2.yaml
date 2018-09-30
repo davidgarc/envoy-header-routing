@@ -1,0 +1,119 @@
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 10000 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: some_service, host_rewrite: jsonplaceholder.typicode.com }
+          http_filters:
+          - name: envoy.filters.http.header_to_metadata
+            config:
+              request_rules:
+                - header: x-tgenv
+                  on_header_present:
+                    metadata_namespace: envoy.lb
+                    key: stage
+                    type: STRING
+                  on_header_missing:
+                    metadata_namespace: envoy.lb
+                    key: default
+                    value: 'true'
+                    type: STRING
+                  remove: false
+          - name: envoy.router
+  clusters:
+  - name: some_service
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
+    lb_subset_config:
+      fallback_policy: NO_FALLBACK
+      subset_selectors:
+        - keys:
+            - default
+        - keys:
+            - stage
+    load_assignment:
+      cluster_name: some_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: jsonplaceholder.typicode.com
+                port_value: 80
+          metadata:
+            filter_metadata:
+              envoy.lb:
+                stage: 'qa'
+        - endpoint:
+            address:
+              socket_address:
+                address: reqres.in
+                port_value: 80
+          metadata:
+            filter_metadata:
+              envoy.lb:
+                default: 'true'
+
+  # - name: prod_cluster
+  #   connect_timeout: 0.25s
+  #   type: LOGICAL_DNS
+  #   # Comment out the following line to test on v6 networks
+  #   dns_lookup_family: V4_ONLY
+  #   lb_policy: ROUND_ROBIN
+  #   hosts:
+  #     - socket_address:
+  #         address: reqres.in
+  #         port_value: 443
+  #   tls_context: { sni: reqres.in }
+
+  # - name: qa_cluster
+  #   connect_timeout: 0.25s
+  #   type: LOGICAL_DNS
+  #   # Comment out the following line to test on v6 networks
+  #   dns_lookup_family: V4_ONLY
+  #   lb_policy: ROUND_ROBIN
+  #   load_assignments:
+  #     cluster_name: qa_cluster
+  #     endpoints: 
+  #       - endpoint:
+  #         address:
+  #           socket_address:
+  #             protocol: TCP
+  #             address: jsonplaceholder.typicode.com
+  #             port_value: 443
+  #         metadata:
+  #           filter_metadata:
+  #             envoy.lb:
+  #               stage: 'qa'
+  #       - endpoint:
+  #         address:
+  #           socket_address:
+  #             protocol: TCP
+  #             address: reqres.in
+  #             port_value: 443
+  #         metadata:
+  #           filter_metadata:
+  #             envoy.lb:
+  #               stage: 'prod'
+
+    
