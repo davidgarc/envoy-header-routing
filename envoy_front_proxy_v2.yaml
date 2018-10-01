@@ -73,47 +73,4 @@ static_resources:
             filter_metadata:
               envoy.lb:
                 default: 'true'
-
-  # - name: prod_cluster
-  #   connect_timeout: 0.25s
-  #   type: LOGICAL_DNS
-  #   # Comment out the following line to test on v6 networks
-  #   dns_lookup_family: V4_ONLY
-  #   lb_policy: ROUND_ROBIN
-  #   hosts:
-  #     - socket_address:
-  #         address: reqres.in
-  #         port_value: 443
-  #   tls_context: { sni: reqres.in }
-
-  # - name: qa_cluster
-  #   connect_timeout: 0.25s
-  #   type: LOGICAL_DNS
-  #   # Comment out the following line to test on v6 networks
-  #   dns_lookup_family: V4_ONLY
-  #   lb_policy: ROUND_ROBIN
-  #   load_assignments:
-  #     cluster_name: qa_cluster
-  #     endpoints: 
-  #       - endpoint:
-  #         address:
-  #           socket_address:
-  #             protocol: TCP
-  #             address: jsonplaceholder.typicode.com
-  #             port_value: 443
-  #         metadata:
-  #           filter_metadata:
-  #             envoy.lb:
-  #               stage: 'qa'
-  #       - endpoint:
-  #         address:
-  #           socket_address:
-  #             protocol: TCP
-  #             address: reqres.in
-  #             port_value: 443
-  #         metadata:
-  #           filter_metadata:
-  #             envoy.lb:
-  #               stage: 'prod'
-
     
